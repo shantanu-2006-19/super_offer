@@ -46,13 +46,15 @@ const nearbyValidation = [
 // Public routes
 router.get('/', getShops);
 router.get('/nearby', nearbyValidation, validateMiddleware, getNearbyShops);
-router.get('/:id', getShop);
 
-// Protected routes (shop owner)
-router.post('/', authMiddleware, shopValidation, validateMiddleware, registerShop);
+// Protected routes (shop owner) - MUST come before /:id
 router.get('/my-shop', authMiddleware, getMyShop);
+router.post('/', authMiddleware, shopValidation, validateMiddleware, registerShop);
 router.put('/:id', authMiddleware, updateShopValidation, validateMiddleware, updateShop);
 router.delete('/:id', authMiddleware, deleteShop);
+
+// Public route for single shop - MUST come last
+router.get('/:id', getShop);
 
 export default router;
 

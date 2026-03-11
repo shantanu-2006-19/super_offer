@@ -47,13 +47,15 @@ const idValidation = [param('id').isMongoId().withMessage('Invalid ID')];
 // Public routes
 router.get('/', getOffers);
 router.get('/nearby', nearbyValidation, validateMiddleware, getNearbyOffers);
-router.get('/:id', idValidation, validateMiddleware, getOffer);
 
-// Protected routes (shop owner)
+// Protected routes (shop owner) - MUST come before /:id
 router.post('/', authMiddleware, offerValidation, validateMiddleware, createOffer);
 router.get('/my/offers', authMiddleware, getMyOffers);
 router.put('/:id', authMiddleware, idValidation, updateOfferValidation, validateMiddleware, updateOffer);
 router.delete('/:id', authMiddleware, idValidation, validateMiddleware, deleteOffer);
+
+// Public route for single offer - MUST come last
+router.get('/:id', idValidation, validateMiddleware, getOffer);
 
 export default router;
 

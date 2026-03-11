@@ -216,16 +216,18 @@ export const getNearbyShops = async (req, res, next) => {
       });
     }
 
+    // Convert km to radians (Earth radius ≈ 6378.1 km)
+    const radiusInRadians = parseFloat(distance) / 6378.1;
+
     const query = {
       status: 'approved',
       isActive: true,
       location: {
-        $near: {
-          $geometry: {
-            type: 'Point',
-            coordinates: [parseFloat(longitude), parseFloat(latitude)]
-          },
-          $maxDistance: parseFloat(distance) * 1000 // Convert km to meters
+        $geoWithin: {
+          $centerSphere: [
+            [parseFloat(longitude), parseFloat(latitude)],
+            radiusInRadians
+          ]
         }
       }
     };

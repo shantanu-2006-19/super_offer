@@ -43,6 +43,13 @@ export const AuthProvider = ({ children }) => {
       setUser(userInfo);
       return { success: true };
     } catch (err) {
+      // Handle validation errors with specific field messages
+      if (err.response?.data?.errors) {
+        const validationErrors = err.response.data.errors;
+        const errorMessages = validationErrors.map(e => `${e.field}: ${e.message}`).join(', ');
+        setError(errorMessages);
+        return { success: false, message: errorMessages, errors: validationErrors };
+      }
       const message = err.response?.data?.message || 'Registration failed';
       setError(message);
       return { success: false, message };

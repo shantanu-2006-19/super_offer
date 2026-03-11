@@ -13,7 +13,7 @@ const registerValidation = [
   body('email').trim().isEmail().withMessage('Please provide a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('role').optional().isIn(['user', 'shop_owner']),
-  body('phone').optional().isMobilePhone()
+  body('phone').optional({ nullable: true, checkFalsy: true }).isMobilePhone().withMessage('Please provide a valid phone number')
 ];
 
 const loginValidation = [

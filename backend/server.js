@@ -12,6 +12,8 @@ import shopRoutes from './routes/shops.js';
 import offerRoutes from './routes/offers.js';
 import adminRoutes from './routes/admin.js';
 
+
+
 // Load env vars
 dotenv.config();
 

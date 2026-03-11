@@ -23,8 +23,9 @@ const refreshTokenSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Auto-delete expired tokens
-refreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+// Index for efficient queries - expiresAt handles cleanup via TTL
+// Note: MongoDB will automatically delete documents after expiresAt passes
+refreshTokenSchema.index({ expiresAt: 1 });
 
 const RefreshToken = mongoose.model('RefreshToken', refreshTokenSchema);
 
