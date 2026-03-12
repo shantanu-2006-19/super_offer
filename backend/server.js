@@ -1,8 +1,10 @@
+require("dotenv").config();
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
+// Connect to database
 import connectDB from './config/db.js';
+connectDB();
 import errorMiddleware from './middleware/errorMiddleware.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
 
@@ -14,13 +16,14 @@ import adminRoutes from './routes/admin.js';
 
 
 
-// Load env vars
-dotenv.config();
-
-// Connect to database
-connectDB();
-
 const app = express();
+
+app.use(cors({
+  origin: [process.env.FRONTEND_URL, "https://super-offer-nine.vercel.app" ,'http://localhost:5173'],
+  credentials: true,
+  allowedOrigins: true,
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
 // Body parser
 app.use(express.json());
@@ -30,12 +33,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // CORS
-app.use(cors({
-  origin: [process.env.FRONTEND_URL, "https://super-offer-nine.vercel.app" ,'http://localhost:5173'],
-  credentials: true,
-  allowedOrigins: true,
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
 
 // Rate limiting
 app.use(generalLimiter);
