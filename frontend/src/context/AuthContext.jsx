@@ -59,6 +59,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     setError(null);
     try {
+      console.log("API URL: ",authAPI);
       const response = await authAPI.login(credentials);
       const { accessToken, user: userInfo } = response.data.data;
       localStorage.setItem('token', accessToken);
