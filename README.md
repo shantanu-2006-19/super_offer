@@ -2,6 +2,12 @@
 
 A full-stack MERN application that allows users to discover nearby offers from local shops based on their location using Google Maps. Shop owners can register their shops and publish offers after admin approval.
 
+## 🚀 Live Demo
+
+Click here to view the project:
+
+🔗 https://super-offer-nine.vercel.app/
+
 ## Features
 
 ### User Features
