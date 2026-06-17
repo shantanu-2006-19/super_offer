@@ -16,8 +16,15 @@ const errorMiddleware = (err, req, res, next) => {
 
   // Mongoose duplicate key
   if (err.code === 11000) {
-    const field = Object.keys(err.keyValue)[0];
-    error.message = `${field} already exists`;
+    const field = Object.keys(err.keyValue || {})[0] || 'Field';
+    // Map internal field names to user-friendly labels
+    const fieldLabels = {
+      email: 'Email address',
+      phone: 'Phone number',
+      name: 'Name'
+    };
+    const label = fieldLabels[field] || field;
+    error.message = `${label} is already registered. Please use a different one or sign in.`;
     error.statusCode = 400;
   }
 

@@ -45,13 +45,14 @@ export const register = async (req, res, next) => {
       });
     }
 
-    // Create user
+    // Create user (email is verified via OTP before reaching here)
     const user = await User.create({
       name,
       email,
       password,
       role: role || 'user',
-      phone
+      phone,
+      emailVerified: true
     });
 
     // Generate tokens

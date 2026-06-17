@@ -82,11 +82,10 @@
 
 /* Map styles */
 .gm-style-iw {
-  @apply !important;
+  overflow: hidden !important;
 }
 
 .gm-style-iw-d {
-  @apply !important;
   overflow: hidden !important;
 }
 

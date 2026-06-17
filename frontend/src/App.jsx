@@ -44,11 +44,14 @@ function App() {
             }
           />
 
-          {/* Shop Owner Routes */}
+          {/* Shop Owner Routes
+              NOTE: register-shop and dashboard use plain auth (not shopOwnerOnly)
+              so a new shop_owner who has no shop yet can still access them.
+              shopOwnerOnly (requires approved shop) is only for offer management. */}
           <Route
             path="/shop-owner/dashboard"
             element={
-              <ProtectedRoute shopOwnerOnly>
+              <ProtectedRoute>
                 <ShopOwnerDashboard />
               </ProtectedRoute>
             }
@@ -56,7 +59,7 @@ function App() {
           <Route
             path="/shop-owner/register-shop"
             element={
-              <ProtectedRoute shopOwnerOnly>
+              <ProtectedRoute>
                 <RegisterShop />
               </ProtectedRoute>
             }
@@ -74,6 +77,24 @@ function App() {
             element={
               <ProtectedRoute shopOwnerOnly>
                 <AddOffer />
+              </ProtectedRoute>
+            }
+          />
+          {/* Edit offer reuses AddOffer with an id param */}
+          <Route
+            path="/shop-owner/edit-offer/:id"
+            element={
+              <ProtectedRoute shopOwnerOnly>
+                <AddOffer />
+              </ProtectedRoute>
+            }
+          />
+          {/* Shop profile reuses RegisterShop for editing */}
+          <Route
+            path="/shop-owner/shop-profile"
+            element={
+              <ProtectedRoute>
+                <RegisterShop />
               </ProtectedRoute>
             }
           />
@@ -105,4 +126,3 @@ function App() {
 }
 
 export default App;
-

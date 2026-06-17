@@ -64,6 +64,12 @@ export const authAPI = {
   getMe: () => api.get('/auth/me')
 };
 
+// Verification APIs (OTP)
+export const verificationAPI = {
+  requestOtp: (email, purpose) => api.post('/verification/otp/request', { email, purpose }),
+  verifyOtp: (email, otp, purpose) => api.post('/verification/otp/verify', { email, otp, purpose })
+};
+
 // Shop APIs
 export const shopAPI = {
   register: (data) => api.post('/shops', data),

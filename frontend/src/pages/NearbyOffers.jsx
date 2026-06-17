@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
-import { FiMapPin, FiFilter, FiX, FiNavigation } from 'react-icons/fi';
+import { FiMapPin, FiNavigation } from 'react-icons/fi';
 import { offerAPI, shopAPI } from '../services/api';
 import OfferGrid from '../components/offer/OfferGrid';
 import Navbar from '../components/Navbar';
@@ -24,8 +24,6 @@ const NearbyOffers = () => {
   const [selectedShop, setSelectedShop] = useState(null);
   const [distance, setDistance] = useState(10);
   const [category, setCategory] = useState('');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'map'
-  const [showFilters, setShowFilters] = useState(false);
 
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''

@@ -1,7 +1,10 @@
+import dotenv from 'dotenv';
+// Load env vars FIRST before any other imports that may read process.env
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import errorMiddleware from './middleware/errorMiddleware.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
@@ -11,11 +14,7 @@ import authRoutes from './routes/auth.js';
 import shopRoutes from './routes/shops.js';
 import offerRoutes from './routes/offers.js';
 import adminRoutes from './routes/admin.js';
-
-
-
-// Load env vars
-dotenv.config();
+import verificationRoutes from './routes/verification.js';
 
 // Connect to database
 connectDB();
@@ -40,9 +39,11 @@ app.use(generalLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/verification', verificationRoutes);
 app.use('/api/shops', shopRoutes);
 app.use('/api/offers', offerRoutes);
 app.use('/api/admin', adminRoutes);
+
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -59,6 +60,7 @@ app.use((req, res) => {
     message: 'Route not found'
   });
 });
+
 
 const PORT = process.env.PORT || 5000;
 

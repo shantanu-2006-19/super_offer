@@ -94,10 +94,11 @@ export const getMyShop = async (req, res, next) => {
     const shop = await Shop.findOne({ owner: req.user._id })
       .populate('owner', 'name email phone');
 
+    // Return null shop gracefully — frontend handles the "no shop" state
     if (!shop) {
-      return res.status(404).json({
-        success: false,
-        message: 'You do not have a registered shop'
+      return res.json({
+        success: true,
+        data: { shop: null, offers: [] }
       });
     }
 

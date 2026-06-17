@@ -1,12 +1,16 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { FiTag, FiDollarSign, FiCalendar, FiSave } from 'react-icons/fi';
 import { offerAPI } from '../../services/api';
 import Navbar from '../../components/Navbar';
 
 const AddOffer = () => {
   const navigate = useNavigate();
+  const { id } = useParams(); // present when editing
+  const isEditing = Boolean(id);
+
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(isEditing);
   const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
@@ -21,24 +25,51 @@ const AddOffer = () => {
 
   const { title, description, discountPercentage, originalPrice, offerPrice, expiryDate } = formData;
 
+  // Load existing offer data when editing
+  useEffect(() => {
+    if (!isEditing) return;
+    const fetchOffer = async () => {
+      try {
+        const response = await offerAPI.getById(id);
+        const offer = response.data.data;
+        setFormData({
+          title: offer.title || '',
+          description: offer.description || '',
+          discountPercentage: offer.discountPercentage?.toString() || '',
+          originalPrice: offer.originalPrice?.toString() || '',
+          offerPrice: offer.offerPrice?.toString() || '',
+          expiryDate: offer.expiryDate ? offer.expiryDate.split('T')[0] : '',
+          images: offer.images || []
+        });
+      } catch (err) {
+        setError('Failed to load offer data');
+      } finally {
+        setFetchLoading(false);
+      }
+    };
+    fetchOffer();
+  }, [id, isEditing]);
+
   const onChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const updated = { ...formData, [e.target.name]: e.target.value };
+    setFormData(updated);
     setError('');
 
     // Auto-calculate offer price based on discount
     if (e.target.name === 'originalPrice' || e.target.name === 'discountPercentage') {
-      const price = e.target.name === 'originalPrice' 
-        ? parseFloat(e.target.value) 
+      const price = e.target.name === 'originalPrice'
+        ? parseFloat(e.target.value)
         : parseFloat(formData.originalPrice);
-      const discount = e.target.name === 'discountPercentage' 
-        ? parseFloat(e.target.value) 
+      const discount = e.target.name === 'discountPercentage'
+        ? parseFloat(e.target.value)
         : parseFloat(formData.discountPercentage);
-      
-      if (price && discount) {
-        const offerPrice = price - (price * discount / 100);
+
+      if (price > 0 && discount >= 0) {
+        const calculated = price - (price * discount / 100);
         setFormData(prev => ({
           ...prev,
-          offerPrice: offerPrice.toFixed(2)
+          [e.target.name]: e.target.value,
+          offerPrice: calculated.toFixed(2)
         }));
       }
     }
@@ -46,24 +77,28 @@ const AddOffer = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-
     setLoading(true);
     setError('');
 
+    const payload = {
+      title,
+      description,
+      discountPercentage: parseFloat(discountPercentage),
+      originalPrice: parseFloat(originalPrice),
+      offerPrice: parseFloat(offerPrice),
+      expiryDate,
+      images: formData.images || []
+    };
+
     try {
-      await offerAPI.create({
-        title,
-        description,
-        discountPercentage: parseFloat(discountPercentage),
-        originalPrice: parseFloat(originalPrice),
-        offerPrice: parseFloat(offerPrice),
-        expiryDate,
-        images: []
-      });
-      
+      if (isEditing) {
+        await offerAPI.update(id, payload);
+      } else {
+        await offerAPI.create(payload);
+      }
       navigate('/shop-owner/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create offer');
+      setError(err.response?.data?.message || `Failed to ${isEditing ? 'update' : 'create'} offer`);
     } finally {
       setLoading(false);
     }
@@ -74,14 +109,25 @@ const AddOffer = () => {
   minDate.setDate(minDate.getDate() + 1);
   const minDateStr = minDate.toISOString().split('T')[0];
 
+  if (fetchLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Navbar />
+        <div className="flex items-center justify-center h-[calc(100vh-64px)]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
-      
+
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="card p-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            Create New Offer
+            {isEditing ? 'Edit Offer' : 'Create New Offer'}
           </h1>
 
           <form onSubmit={onSubmit} className="space-y-6">
@@ -125,7 +171,7 @@ const AddOffer = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="originalPrice" className="label">Original Price ($) *</label>
+                <label htmlFor="originalPrice" className="label">Original Price (₹) *</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <FiDollarSign className="h-5 w-5 text-gray-400" />
@@ -164,7 +210,7 @@ const AddOffer = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="offerPrice" className="label">Offer Price ($) *</label>
+                <label htmlFor="offerPrice" className="label">Offer Price (₹) *</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <FiDollarSign className="h-5 w-5 text-gray-400" />
@@ -178,7 +224,7 @@ const AddOffer = () => {
                     required
                     value={offerPrice}
                     onChange={onChange}
-                    className="input pl-10 bg-gray-100"
+                    className="input pl-10 bg-gray-100 dark:bg-gray-700"
                     readOnly
                   />
                 </div>
@@ -215,7 +261,7 @@ const AddOffer = () => {
                 ) : (
                   <>
                     <FiSave className="h-5 w-5" />
-                    <span>Create Offer</span>
+                    <span>{isEditing ? 'Update Offer' : 'Create Offer'}</span>
                   </>
                 )}
               </button>
@@ -228,4 +274,3 @@ const AddOffer = () => {
 };
 
 export default AddOffer;
-

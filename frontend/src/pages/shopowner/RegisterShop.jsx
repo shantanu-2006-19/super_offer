@@ -1,14 +1,19 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FiShoppingBag, FiMapPin, FiPhone, FiMail, FiSave } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { FiShoppingBag, FiMapPin, FiPhone, FiSave } from 'react-icons/fi';
 import { shopAPI } from '../../services/api';
 import Navbar from '../../components/Navbar';
 
 const RegisterShop = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isEditing = location.pathname === '/shop-owner/shop-profile';
+
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(isEditing);
   const [error, setError] = useState('');
-  
+  const [shopId, setShopId] = useState(null);
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -20,7 +25,7 @@ const RegisterShop = () => {
     images: []
   });
 
-  const { name, description, category, phone, address, latitude, longitude, images } = formData;
+  const { name, description, category, phone, address, latitude, longitude } = formData;
 
   const categories = [
     { value: 'restaurant', label: 'Restaurant' },
@@ -34,6 +39,35 @@ const RegisterShop = () => {
     { value: 'other', label: 'Other' }
   ];
 
+  // Load existing shop data when editing
+  useEffect(() => {
+    if (!isEditing) return;
+    const fetchShop = async () => {
+      try {
+        const response = await shopAPI.getMyShop();
+        const shop = response.data.data.shop;
+        if (shop) {
+          setShopId(shop._id);
+          setFormData({
+            name: shop.name || '',
+            description: shop.description || '',
+            category: shop.category || 'retail',
+            phone: shop.phone || '',
+            address: shop.address || '',
+            latitude: shop.location?.coordinates?.[1]?.toString() || '',
+            longitude: shop.location?.coordinates?.[0]?.toString() || '',
+            images: shop.images || []
+          });
+        }
+      } catch (err) {
+        setError('Failed to load shop data');
+      } finally {
+        setFetchLoading(false);
+      }
+    };
+    fetchShop();
+  }, [isEditing]);
+
   const onChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
@@ -43,13 +77,13 @@ const RegisterShop = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setFormData({
-            ...formData,
+          setFormData(prev => ({
+            ...prev,
             latitude: position.coords.latitude.toString(),
             longitude: position.coords.longitude.toString()
-          });
+          }));
         },
-        (error) => {
+        () => {
           setError('Could not get your location. Please enter manually.');
         }
       );
@@ -58,7 +92,7 @@ const RegisterShop = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!latitude || !longitude) {
       setError('Please set your shop location');
       return;
@@ -67,34 +101,50 @@ const RegisterShop = () => {
     setLoading(true);
     setError('');
 
+    const payload = {
+      name,
+      description,
+      category,
+      phone,
+      address,
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude),
+      images: formData.images.length > 0 ? formData.images : []
+    };
+
     try {
-      await shopAPI.register({
-        name,
-        description,
-        category,
-        phone,
-        address,
-        latitude: parseFloat(latitude),
-        longitude: parseFloat(longitude),
-        images: images.length > 0 ? images : []
-      });
-      
+      if (isEditing && shopId) {
+        await shopAPI.update(shopId, payload);
+      } else {
+        await shopAPI.register(payload);
+      }
       navigate('/shop-owner/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to register shop');
+      setError(err.response?.data?.message || `Failed to ${isEditing ? 'update' : 'register'} shop`);
     } finally {
       setLoading(false);
     }
   };
 
+  if (fetchLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Navbar />
+        <div className="flex items-center justify-center h-[calc(100vh-64px)]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
-      
+
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="card p-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            Register Your Shop
+            {isEditing ? 'Edit Shop Profile' : 'Register Your Shop'}
           </h1>
 
           <form onSubmit={onSubmit} className="space-y-6">
@@ -202,7 +252,7 @@ const RegisterShop = () => {
                   value={latitude}
                   onChange={onChange}
                   className="input"
-                  placeholder="e.g., 40.7128"
+                  placeholder="e.g., 18.5204"
                 />
               </div>
               <div>
@@ -216,7 +266,7 @@ const RegisterShop = () => {
                   value={longitude}
                   onChange={onChange}
                   className="input"
-                  placeholder="e.g., -74.0060"
+                  placeholder="e.g., 73.8567"
                 />
               </div>
             </div>
@@ -224,10 +274,10 @@ const RegisterShop = () => {
             <button
               type="button"
               onClick={handleLocationDetect}
-              className="btn btn-outline w-full"
+              className="btn btn-outline w-full flex items-center justify-center space-x-2"
             >
-              <FiMapPin className="mr-2" />
-              Detect My Location
+              <FiMapPin className="h-4 w-4" />
+              <span>Detect My Location</span>
             </button>
 
             <div className="pt-4">
@@ -241,7 +291,7 @@ const RegisterShop = () => {
                 ) : (
                   <>
                     <FiSave className="h-5 w-5" />
-                    <span>Submit for Approval</span>
+                    <span>{isEditing ? 'Save Changes' : 'Submit for Approval'}</span>
                   </>
                 )}
               </button>
@@ -254,4 +304,3 @@ const RegisterShop = () => {
 };
 
 export default RegisterShop;
-

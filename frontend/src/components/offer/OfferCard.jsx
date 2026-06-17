@@ -14,7 +14,7 @@ const OfferCard = ({ offer }) => {
     shop
   } = offer;
 
-  const savings = originalPrice - offerPrice;
+  const savings = (originalPrice || 0) - (offerPrice || 0);
   const isExpired = new Date(expiryDate) < new Date();
   const daysLeft = Math.ceil((new Date(expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
 
@@ -76,10 +76,10 @@ const OfferCard = ({ offer }) => {
         {/* Price */}
         <div className="flex items-center space-x-3 mb-3">
           <span className="text-2xl font-bold text-primary-600">
-            ${offerPrice.toFixed(2)}
+            ${(offerPrice || 0).toFixed(2)}
           </span>
           <span className="text-lg text-gray-400 line-through">
-            ${originalPrice.toFixed(2)}
+            ${(originalPrice || 0).toFixed(2)}
           </span>
           <span className="text-sm text-green-600 font-medium">
             Save ${savings.toFixed(2)}
